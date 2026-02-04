@@ -88,9 +88,20 @@ if "result_json" not in st.session_state:
 if "result_error" not in st.session_state:
     st.session_state["result_error"] = None
 
+def clear_results() -> None:
+    st.session_state["result_raw"] = None
+    st.session_state["result_json"] = None
+    st.session_state["result_error"] = None
+
+def clear_form() -> None:
+    st.session_state["po_description"] = ""
+    st.session_state["supplier"] = ""
+    clear_results()
+
 def apply_sample(description: str, supplier_value: str) -> None:
     st.session_state["po_description"] = description
     st.session_state["supplier"] = supplier_value
+    clear_results()
 
 st.markdown("<h3 class='app-subtitle'>Sample inputs</h3>", unsafe_allow_html=True)
 st.caption("Click to prefill the form with an example.")
@@ -116,16 +127,28 @@ with st.form("po-classifier-form"):
         height=140,
         placeholder="e.g., Purchase of office chairs",
         help="Include key item/service details, quantities, or contract terms.",
-        key="po_description"
+        key="po_description",
+        on_change=clear_results
     )
     st.caption(f"{len(po_description.strip())} characters")
     supplier = st.text_input(
         "Supplier (optional)",
         placeholder="e.g., Staples",
-        key="supplier"
+        key="supplier",
+        on_change=clear_results
     )
     submit_disabled = not po_description.strip()
-    submitted = st.form_submit_button("Classify PO", disabled=submit_disabled)
+    button_col_1, button_col_2 = st.columns(2)
+    with button_col_1:
+        submitted = st.form_submit_button("Classify PO", disabled=submit_disabled)
+    with button_col_2:
+        cleared = st.form_submit_button("Clear form")
+
+if "cleared" not in locals():
+    cleared = False
+
+if cleared:
+    clear_form()
 
 if submitted:
     description_value = po_description.strip()
@@ -133,6 +156,8 @@ if submitted:
     if not description_value:
         st.warning("Please enter a PO description.")
     else:
+        status_note = st.empty()
+        status_note.caption("Classifying...")
         with st.spinner("Classifying..."):
             try:
                 result = classify_po(description_value, supplier_value)
@@ -148,6 +173,7 @@ if submitted:
                 except Exception:
                     st.session_state["result_json"] = None
                     st.session_state["result_error"] = ("json", "Invalid model response")
+        status_note.empty()
 
 if (
     st.session_state["result_raw"] is not None
@@ -163,7 +189,20 @@ if (
         else:
             st.error("Invalid model response")
     if st.session_state["result_json"] is not None:
+        status_label = "Classified"
+        l1_value = st.session_state["result_json"].get("L1")
+        l2_value = st.session_state["result_json"].get("L2")
+        l3_value = st.session_state["result_json"].get("L3")
+        if "Not sure" in {l1_value, l2_value, l3_value}:
+            status_label = "Needs review"
+        st.caption(f"Status: {status_label}")
         st.json(st.session_state["result_json"])
+        st.caption("Copyable JSON")
+        st.text_area(
+            "Copyable JSON",
+            value=json.dumps(st.session_state["result_json"], indent=2),
+            height=160
+        )
     if st.session_state["result_raw"] is not None:
         with st.expander("Show raw model response"):
             st.text(st.session_state["result_raw"])
