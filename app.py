@@ -62,12 +62,25 @@ st.markdown(
 
     .stButton > button {
         width: 100%;
-        background: #1f6f5b;
+        background: #c0392b;
         color: #ffffff;
         padding: 12px 14px;
         font-weight: 600;
         border-radius: 12px;
         border: none;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background: #c0392b;
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 6px 14px;
+        margin-right: 8px;
+    }
+
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background: #922b21;
+        color: #ffffff;
     }
     </style>
     """,
