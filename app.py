@@ -87,6 +87,8 @@ if "result_json" not in st.session_state:
     st.session_state["result_json"] = None
 if "result_error" not in st.session_state:
     st.session_state["result_error"] = None
+if "last_inputs" not in st.session_state:
+    st.session_state["last_inputs"] = ("", "")
 
 def clear_results() -> None:
     st.session_state["result_raw"] = None
@@ -97,11 +99,13 @@ def clear_form() -> None:
     st.session_state["po_description"] = ""
     st.session_state["supplier"] = ""
     clear_results()
+    st.session_state["last_inputs"] = ("", "")
 
 def apply_sample(description: str, supplier_value: str) -> None:
     st.session_state["po_description"] = description
     st.session_state["supplier"] = supplier_value
     clear_results()
+    st.session_state["last_inputs"] = (description, supplier_value)
 
 st.markdown("<h3 class='app-subtitle'>Sample inputs</h3>", unsafe_allow_html=True)
 st.caption("Click to prefill the form with an example.")
@@ -127,15 +131,13 @@ with st.form("po-classifier-form"):
         height=140,
         placeholder="e.g., Purchase of office chairs",
         help="Include key item/service details, quantities, or contract terms.",
-        key="po_description",
-        on_change=clear_results
+        key="po_description"
     )
     st.caption(f"{len(po_description.strip())} characters")
     supplier = st.text_input(
         "Supplier (optional)",
         placeholder="e.g., Staples",
-        key="supplier",
-        on_change=clear_results
+        key="supplier"
     )
     submit_disabled = not po_description.strip()
     button_col_1, button_col_2 = st.columns(2)
@@ -149,6 +151,11 @@ if "cleared" not in locals():
 
 if cleared:
     clear_form()
+
+current_inputs = (po_description, supplier)
+if st.session_state["last_inputs"] != current_inputs and not submitted and not cleared:
+    clear_results()
+st.session_state["last_inputs"] = current_inputs
 
 if submitted:
     description_value = po_description.strip()
