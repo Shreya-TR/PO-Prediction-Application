@@ -89,6 +89,8 @@ if "result_error" not in st.session_state:
     st.session_state["result_error"] = None
 if "last_inputs" not in st.session_state:
     st.session_state["last_inputs"] = ("", "")
+if "clear_requested" not in st.session_state:
+    st.session_state["clear_requested"] = False
 
 def clear_results() -> None:
     st.session_state["result_raw"] = None
@@ -106,6 +108,10 @@ def apply_sample(description: str, supplier_value: str) -> None:
     st.session_state["supplier"] = supplier_value
     clear_results()
     st.session_state["last_inputs"] = (description, supplier_value)
+
+if st.session_state["clear_requested"]:
+    clear_form()
+    st.session_state["clear_requested"] = False
 
 st.markdown("<h3 class='app-subtitle'>Sample inputs</h3>", unsafe_allow_html=True)
 st.caption("Click to prefill the form with an example.")
@@ -150,7 +156,8 @@ if "cleared" not in locals():
     cleared = False
 
 if cleared:
-    clear_form()
+    st.session_state["clear_requested"] = True
+    st.rerun()
 
 current_inputs = (po_description, supplier)
 if st.session_state["last_inputs"] != current_inputs and not submitted and not cleared:
