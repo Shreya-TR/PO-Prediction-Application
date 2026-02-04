@@ -22,7 +22,14 @@ st.markdown(
     }
 
     h1, .stCaption {
-        color: #2c2c2c;
+        color: #2c2c2c !important;
+    }
+
+    .app-title {
+        color: #2c2c2c !important;
+        font-family: "Georgia", serif;
+        font-weight: 600;
+        margin-bottom: 4px;
     }
 
     label, .stTextInput label, .stTextArea label {
@@ -60,7 +67,7 @@ st.markdown(
 
 st.markdown("<div class='app-card'>", unsafe_allow_html=True)
 
-st.title("PO L1-L2-L3 Classifier")
+st.markdown("<h1 class='app-title'>PO L1-L2-L3 Classifier</h1>", unsafe_allow_html=True)
 st.caption("Paste a PO description and (optionally) a supplier. Get structured category output.")
 
 po_description = st.text_area(
