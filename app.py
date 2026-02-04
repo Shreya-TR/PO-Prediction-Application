@@ -110,6 +110,8 @@ if "batch_results" not in st.session_state:
     st.session_state["batch_results"] = []
 if "batch_error" not in st.session_state:
     st.session_state["batch_error"] = None
+if "batch_uploader_key" not in st.session_state:
+    st.session_state["batch_uploader_key"] = 0
 
 def clear_results() -> None:
     st.session_state["result_raw"] = None
@@ -133,6 +135,11 @@ def parse_model_json(result: str):
         return json.loads(result), None
     except Exception:
         return None, "Invalid model response"
+
+def clear_batch() -> None:
+    st.session_state["batch_results"] = []
+    st.session_state["batch_error"] = None
+    st.session_state["batch_uploader_key"] += 1
 
 if st.session_state["clear_requested"]:
     clear_form()
@@ -263,7 +270,17 @@ with tabs[1]:
         mime="text/csv"
     )
 
-    uploaded_file = st.file_uploader("CSV file", type=["csv"])
+    batch_button_col_1, batch_button_col_2 = st.columns(2)
+    with batch_button_col_1:
+        st.button("Clear batch form", on_click=clear_batch, use_container_width=True)
+    with batch_button_col_2:
+        st.caption("Use this to reset the batch uploader and results.")
+
+    uploaded_file = st.file_uploader(
+        "CSV file",
+        type=["csv"],
+        key=f"batch_uploader_{st.session_state['batch_uploader_key']}"
+    )
     csv_headers = []
     csv_rows = []
     if uploaded_file is not None:
